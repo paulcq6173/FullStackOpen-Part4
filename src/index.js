@@ -1,12 +1,13 @@
-import cors from "cors";
-import express from "express";
-import morgan from "morgan";
-import errorHandler from "./errorHandler.js";
-import Phone from "./models/persons.js";
+import cors from 'cors';
+import express from 'express';
+import morgan from 'morgan';
+import errorHandler from './errorHandler.js';
+import Phone from './models/persons.js';
+import connectToDB from './mongo.js';
 
 const app = express();
 
-morgan.token("body", (req) => {
+morgan.token('body', (req) => {
   const arr = Object.values(req.body);
   if (arr.length > 0) {
     return JSON.stringify(req.body);
@@ -14,20 +15,22 @@ morgan.token("body", (req) => {
 });
 
 // Middleware order
-app.use(express.static("build")); // Serving static files from the backend
+app.use(express.static('build')); // Serving static files from the backend
 app.use(express.json());
 app.use(
-  morgan(":method :url :status :response-time ms - :res[content-length] :body")
+  morgan(':method :url :status :response-time ms - :res[content-length] :body')
 );
 app.use(cors());
 
-app.post("/api/phonebook", (request, response, next) => {
+connectToDB();
+
+app.post('/api/phonebook', (request, response, next) => {
   const body = request.body;
   const { name, number } = body;
 
   if (!name || !number) {
     return response.status(400).json({
-      error: "content missing",
+      error: 'content missing',
     });
   }
 
@@ -44,7 +47,7 @@ app.post("/api/phonebook", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.get("/info", (request, response) => {
+app.get('/info', (request, response) => {
   Phone.find({}).then((persons) => {
     response.send(
       `<h2>PhoneBook has info for ${persons.length} people<br/>
@@ -54,17 +57,17 @@ app.get("/info", (request, response) => {
   });
 });
 
-app.get("/", (request, response) => {
-  response.send("<h1>Hello World!</h1>");
+app.get('/', (request, response) => {
+  response.send('<h1>Hello World!</h1>');
 });
 
-app.get("/api/phonebook", (request, response) => {
+app.get('/api/phonebook', (request, response) => {
   Phone.find({}).then((persons) => {
     response.json(persons);
   });
 });
 
-app.get("/api/phonebook/:id", (request, response, next) => {
+app.get('/api/phonebook/:id', (request, response, next) => {
   Phone.findById(request.params.id)
     .then((person) => {
       if (person) {
@@ -76,13 +79,8 @@ app.get("/api/phonebook/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.put("/api/phonebook/:id", (request, response, next) => {
+app.put('/api/phonebook/:id', (request, response, next) => {
   const { name, number } = request.body;
-
-  const phone = {
-    name: name,
-    number: number,
-  };
 
   // new: true
   // It means use our custom document instead of default value.
@@ -91,7 +89,7 @@ app.put("/api/phonebook/:id", (request, response, next) => {
   Phone.findByIdAndUpdate(
     request.params.id,
     { name, number },
-    { new: true, runValidators: true, context: "query" }
+    { new: true, runValidators: true, context: 'query' }
   )
     .then((updatedPhone) => {
       response.json(updatedPhone);
@@ -99,16 +97,16 @@ app.put("/api/phonebook/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.delete("/api/phonebook/:id", (request, response) => {
+app.delete('/api/phonebook/:id', (request, response, next) => {
   Phone.findByIdAndDelete(request.params.id)
-    .then((result) => {
+    .then(() => {
       response.status(200).end();
     })
     .catch((error) => next(error));
 });
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: "unknown endpoint" });
+  response.status(404).send({ error: 'unknown endpoint' });
 };
 
 // handler of requests with unknown endpoint

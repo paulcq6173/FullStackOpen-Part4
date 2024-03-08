@@ -1,35 +1,20 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
+// Declare for using .env variables
+import dotenv from 'dotenv';
 
-if (process.argv.length < 3) {
-  console.log("give password as argument");
-  process.exit(1);
-}
+dotenv.config();
 
-mongoose.set("strictQuery", false);
+function connectToDB() {
+  const url = process.env.MONGODB_URL;
 
-const phoneSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-});
+  mongoose.set('strictQuery', false);
 
-const Phone = mongoose.model("Phone", phoneSchema);
-
-if (!(newName || newNumber)) {
-  Phone.find({}).then((persons) => {
-    console.log("phonebook:");
-    persons.forEach((e) => {
-      console.log(`${e.name} ${e.number}`);
+  mongoose
+    .connect(url)
+    .then(() => console.log('MongoDB connected'))
+    .catch((error) => {
+      console.log('Failed to connect to MongoDB:', error.message);
     });
-    mongoose.connection.close();
-  });
-} else {
-  const phone = new Phone({
-    name: newName,
-    number: newNumber,
-  });
-
-  phone.save().then((result) => {
-    console.log(`Added ${newName} number ${newNumber} to phonebook`);
-    mongoose.connection.close();
-  });
 }
+
+export default connectToDB;
