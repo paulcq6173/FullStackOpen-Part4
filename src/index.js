@@ -7,7 +7,10 @@ import Phone from "./models/persons.js";
 const app = express();
 
 morgan.token("body", (req) => {
-  return JSON.stringify(req.body);
+  const arr = Object.values(req.body);
+  if (arr.length > 0) {
+    return JSON.stringify(req.body);
+  }
 });
 
 // Middleware order
@@ -18,25 +21,7 @@ app.use(
 );
 app.use(cors());
 
-//const FILE_PATH = "../data/db.json";
-// Resloves ESLint: Parsing error: assert {type: "json"}
-//const loadJSON = (path) =>
-//  JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-//const writeJSON = (path, array) => JSON.stringify(writeFileSync(path, array));
-//let phonebook = loadJSON(FILE_PATH);
-
-/*function generateId() {
-  const count = 5000;
-  let nextId = Math.floor(Math.random() * count) + 1;
-  const foundData = phonebook.find((e) => e.id === nextId);
-  if (foundData) {
-    nextId = Math.max(...phonebook.map((e) => e.id)) + 1;
-  }
-
-  return nextId;
-}*/
-
-app.post("/api/phonebook", (request, response) => {
+app.post("/api/phonebook", (request, response, next) => {
   const body = request.body;
   const { name, number } = body;
 
@@ -51,9 +36,12 @@ app.post("/api/phonebook", (request, response) => {
     number: number,
   });
 
-  phone.save().then((savedPhone) => {
-    response.json(savedPhone);
-  });
+  phone
+    .save()
+    .then((savedPhone) => {
+      response.json(savedPhone);
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/info", (request, response) => {
@@ -88,18 +76,23 @@ app.get("/api/phonebook/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.put("/api/phonebook/:id", (request, response) => {
-  const body = request.body;
+app.put("/api/phonebook/:id", (request, response, next) => {
+  const { name, number } = request.body;
 
   const phone = {
-    name: body.name,
-    number: body.number,
+    name: name,
+    number: number,
   };
 
-  // Option?:new
+  // new: true
   // It means use our custom document instead of default value.
-  // see persons schema set method
-  Phone.findByIdAndUpdate(request.params.id, phone, { new: true })
+  // see persons schema set method.
+  // runValidators: true - turn on update validators
+  Phone.findByIdAndUpdate(
+    request.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: "query" }
+  )
     .then((updatedPhone) => {
       response.json(updatedPhone);
     })
