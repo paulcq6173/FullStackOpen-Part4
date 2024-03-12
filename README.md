@@ -1,13 +1,5 @@
-# FullStackOpen-Part3
+# FullStackOpen-Part4
 
-## PhoneBook-backend
-
-PhoneBook back-end:
-
-https://fullstackopen-part3-u11f.onrender.com/
-
-https://fullstackopen-part3-u11f.onrender.com/info
-
-https://fullstackopen-part3-u11f.onrender.com/api/phonebook
+For part4 bloglist exercises
 
 
